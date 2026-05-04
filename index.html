@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Script converting tool</title>
+
+<style>
+:root {
+  --bg: #1c1b1f;
+  --surface: #2b2930;
+  --text: #e6e1e5;
+  --primary: #d0bcff;
+  --outline: #938f99;
+}
+
+[data-theme="light"] {
+  --bg: #f8f6fb;
+  --surface: #ece6f0;
+  --text: #1c1b1f;
+  --primary: #6750A4;
+  --outline: #79747e;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui;
+  background: var(--bg);
+  color: var(--text);
+}
+
+header {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  padding: 16px;
+}
+
+.header-center {
+  justify-self: center;
+  cursor: pointer;
+}
+
+.header-right {
+  justify-self: end;
+}
+
+.container {
+  max-width: 700px;
+  margin: auto;
+  padding: 16px;
+}
+
+.block {
+  margin-top: 16px;
+  padding: 16px;
+  background: var(--surface);
+  border-radius: 20px;
+}
+
+textarea {
+  width: 100%;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  font-size: 16px;
+  resize: none;
+  outline: none;
+}
+
+.label {
+  font-weight: bold;
+  margin-bottom: 6px;
+  opacity: 0.8;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+button {
+  padding: 6px 10px;
+  border-radius: 10px;
+  border: 1px solid var(--outline);
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+}
+
+button:hover {
+  background: rgba(255,255,255,0.05);
+}
+
+footer {
+  text-align: center;
+  padding: 20px;
+  opacity: 0.6;
+}
+#tote, #kaganica {
+  font-size: 24px;
+  line-height: 1.5;
+  direction: rtl; 
+  word-spacing: 4px;
+  letter-spacing: 1px;
+  font-family: 'Segoe UI Historic', 'Noto Sans Old Turkic', serif;
+}
+
+</style>
+</head>
+
+<body>
+ <header>
+  <div>Script converting tool</div>
+   <div class="header-center" onclick="alert('әзірленуде')">𐰴𐰔𐰴𐱁𐰀
+  </div>
+
+  <div class="header-right">
+     <select id="theme">
+         <option value="dark">қараңғы</option>
+         <option value="light">жарық</option>
+     </select>
+  </div>
+</header>
+
+<div class="container">
+
+  <div class="block">
+    <div class="label">кірілше</div>
+    <textarea id="input" rows="3" placeholder="бірдеңе жазыңыз..."></textarea>
+  </div>
+
+  <div class="block">
+    <div class="label">төте жазу</div>
+    <textarea id="tote"></textarea>
+    <div class="actions">
+      <button onclick="copyText('tote')">copy</button>
+      <button onclick="downloadText('tote')">.txt</button>
+    </div>
+  </div>
+
+<div class="block">
+  <div class="label">көне түркі жазуы (kaganica)</div>
+  <textarea id="kaganica" style="font-family: 'Segoe UI Historic', 'Noto Sans Old Turkic', serif; font-size: 24px;"></textarea>
+  <div class="actions">
+    <button onclick="copyText('kaganica')">copy</button>
+    <button onclick="downloadText('kaganica')">.txt</button>
+  </div>
+</div>
+
+  <div class="block">
+    <div class="label">латынша</div>
+    <textarea id="latin"></textarea>
+    <div class="actions">
+      <button onclick="copyText('latin')">copy</button>
+      <button onclick="downloadText('latin')">.txt</button>
+    </div>
+  </div>
+  <div class="block">
+    <div class="label">romanized</div>
+    <textarea id="roman"></textarea>
+    <div class="actions">
+      <button onclick="copyText('roman')">copy</button>
+      <button onclick="downloadText('roman')">.txt</button>
+   </div>
+</div>
+
+</div>
+
+<footer>
+
+  2026 • izumiya.uk
+ <br>
+ <br> → қазақ тілі <a href="https://kk.wikipedia.org/wiki/%D2%9A%D0%B0%D0%B7%D0%B0%D2%9B_%D1%82%D1%96%D0%BB%D1%96" target="_blank" rel="noopener noreferrer"> wikipedia </a>
+ <br> → қазақ әліпбиі <a href="https://kk.wikipedia.org/wiki/%D2%9A%D0%B0%D0%B7%D0%B0%D2%9B_%D3%99%D0%BB%D1%96%D0%BF%D0%B1%D0%B8%D1%96" target="_blank" rel="noopener noreferrer"> wikipedia </a>
+ <br> → қазақ графикасы <a href="https://kk.wikipedia.org/wiki/%D2%9A%D0%B0%D0%B7%D0%B0%D2%9B_%D0%B3%D1%80%D0%B0%D1%84%D0%B8%D0%BA%D0%B0%D1%81%D1%8B" target="_blank" rel="noopener noreferrer"> wikipedia </a>
+ <br>
+ <br> пошта: leaner-katanas.4y@icloud.com
+
+</footer>
+
+
+
+<script>
+
+// theme
+document.documentElement.setAttribute("data-theme", "dark");
+document.getElementById("theme").onchange = e =>
+  document.documentElement.setAttribute("data-theme", e.target.value);
+
+// maps
+const kaganMap = {
+    'б': { 1: '𐰉', 2: '𐰋' },
+    'в': '𐰉', // v -> b
+    'г': '𐰏',
+    'ғ': '𐰍',
+    'д': { 1: '𐰑', 2: '𐰓' },
+    'ж': { 1: '𐰖', 2: '𐰘' },
+    'з': '𐰔',
+    'й': { 1: '𐰖', 2: '𐰘' },
+    'к': '𐰚',
+    'қ': '𐰴',
+    'л': { 1: '𐰞', 2: '𐰠' },
+    'м': '𐰢',
+    'н': { 1: '𐰣', 2: '𐰤' },
+    'ң': '𐰭',
+    'п': '𐰯',
+    'р': { 1: '𐰺', 2: '𐰼' },
+    'с': { 1: '𐰽', 2: '𐰾' },
+    'т': { 1: '𐱃', 2: '𐱅' },
+    'ф': '𐰯', // f -> p
+    'х': '𐰴',
+    'һ': '𐰴',
+    'ц': '𐰽',
+    'ч': '𐰲',
+    'ш': '𐱁'
+};
+
+const latinMap = {
+  а:"a", ә:"ä", б:"b", в:"v", г:"g", ғ:"ğ",
+  д:"d", е:"e", ж:"j", з:"z", й:"y",
+  к:"k", қ:"q", л:"l", м:"m", н:"n", ң:"ń",
+  о:"o", ө:"ö", п:"p", р:"r", с:"s", т:"t",
+  ұ:"u", ү:"ü", ф:"f", х:"h", һ:"h",
+  ч:"c", ш:"c", щ:"cc", ы:"ı", і:"i",
+  ю:"yu", я:"ya", ц:"s", ь:"y", ъ:"ıy", э:"e"
+};
+
+const toteMap = {
+  а:"ا", ә:"ا", б:"ب", в:"ۆ", г:"گ", ғ:"ع",
+  д:"د", е:"ە", ж:"ج", з:"ز", и:"ي", й:"ي",
+  к:"ك", қ:"ق", л:"ل", м:"م", н:"ن", ң:"ڭ",
+  о:"و", ө:"و", п:"پ", р:"ر", с:"س", т:"ت",
+  ф:"ف", х:"ح", һ:"ھ", ұ:"ۇ", ү:"ۇ", у:"ۋ",
+  ч:"ش", ш:"ش", щ:"شش", ы:"ى", і:"ى",
+  ю:"يۋ", я:"يا", ц:"س", ь:"ي", ъ:"ىي", э:"ە"
+};
+
+const punctMap = {
+  ",": "،",
+  ";": "؛",
+  ":": ":",
+  ".": "."
+};
+
+const romanMap = {
+  а:"a", ә:"a",
+  о:"o", ө:"o",
+  ұ:"u", ү:"u",
+  ы:"i", і:"i",
+
+  и:"iy",
+  й:"y", е:"e", э:"e", у:"u",
+  я:"ya", ё:"yo", ю:"yu",
+  к:"k", г:"g", қ:"q", ғ:"g", х:"h", һ:"h", ң:"ng",
+  п:"p", б:"b", м:"m", ф:"f", в:"v",
+  т:"t", с:"s", ш:"sh", ч:"ch",
+  д:"d", з:"z", ж:"j",
+  н:"n", л:"l", р:"r",
+  щ:"shch", ц:"ts",
+  ь:"", ъ:""
+};
+
+// helpers
+function isVowel(c) {
+  return /[аеёиоуыәөүіұү]/i.test(c);
+}
+
+function getHarmony(word) {
+  return /[әөүі]/.test(word) ? "front" : "back";
+}
+
+//У әрпі ıw uw iw üw
+function applyDiphthongs(word, harmony) {
+  let result = "";
+
+  for (let i = 0; i < word.length; i++) {
+
+    let ch = word[i];
+
+    if (ch === "у") {
+
+      let prev = word[i - 1];
+
+      let isStart = i === 0;
+
+      let isSecondAfterVowel =
+        i === 1 && prev && isVowel(prev);
+
+      let isSecondAfterConsonant =
+        i === 1 && prev && !isVowel(prev);
+
+      if (isStart || isSecondAfterVowel || isSecondAfterConsonant) {
+        result += (harmony === "back") ? "uw" : "üw";
+      } else {
+        result += (harmony === "back") ? "ıw" : "iw";
+      }
+
+      continue;
+    }
+
+    result += ch;
+  }
+
+  return result;
+}
+
+function convertToKagan(word) {
+    let w = word.toLowerCase()
+        .replace(/ю/g, 'йу').replace(/я/g, 'йа')
+        .replace(/ё/g, 'йө').replace(/э/g, 'е');
+    
+    let type = /[аоұықғ]/.test(w) ? 1 : 2;
+    let result = "";
+
+    // Лигатураларды алдын ала ауыстыру (күрделі таңбалар)
+    const ligatures = [
+        {key: 'ық', val: '𐰶'}, {key: 'қы', val: '𐰶'},
+        {key: 'оқ', val: '𐰸'}, {key: 'ұқ', val: '𐰸'},
+        {key: 'өк', val: '𐰜'}, {key: 'үк', val: '𐰜'}, {key: 'ік', val: '𐰜'},
+        {key: 'от', val: '𐱇'}, {key: 'ұт', val: '𐱇'},
+        {key: 'ант', val: '𐰦'}, {key: 'алт', val: '𐰡'},
+        {key: 'нч', val: '𐰨'}, {key: 'нші', val: '𐰨'}
+    ];
+
+    for (let i = 0; i < w.length; i++) {
+        let foundLigature = false;
+        for (let lig of ligatures) {
+            if (w.substring(i, i + lig.key.length) === lig.key) {
+                result += lig.val;
+                i += lig.key.length - 1;
+                foundLigature = true;
+                break;
+            }
+        }
+        if (foundLigature) continue;
+
+        let ch = w[i];
+        let next = w[i+1];
+
+        // 1. Дауыстыларды үнемдеу ережесі (а, ә, е жазылмайды, егер соңы болмаса)
+        if ((ch === 'а' || ch === 'ә' || ch === 'е')) {
+            if (i === w.length - 1) { 
+                result += (ch === 'е') ? '𐰅' : '𐰀'; 
+            }
+            continue; // ортасында келсе жазбаймыз
+        }
+
+        // 2. Басқа дауыстылар
+        if (ch === 'ы' || ch === 'і') { result += '𐰃'; continue; }
+        if (ch === 'и') { result += '𐰄'; continue; }
+        if (ch === 'о' || ch === 'ұ' || ch === 'у') {
+            if (type === 1) result += '𐰆'; 
+            else result += '𐰇';
+            continue;
+        }
+        if (ch === 'ө' || ch === 'ү') { result += '𐰇'; continue; }
+
+        // 3. Дауыссыздар
+        let map = kaganMap[ch];
+        if (map) {
+            if (typeof map === 'object') {
+                result += map[type];
+            } else {
+                result += map;
+            }
+        } else {
+            result += ch; // картада жоқ болса өзін қалдыру
+        }
+    }
+    return result;
+}
+// hamza
+function needsHamza(word) {
+  return /[әөүі]/.test(word) && !/[кге]/.test(word);
+}
+
+// roman
+function buildRoman(word) {
+  let result = "";
+
+  for (let ch of word) {
+    result += romanMap[ch] ?? ch;
+  }
+
+  return result;
+}
+
+// main convert
+function convert(text) {
+
+  let words = text.split(/(\s+)/);
+  let latin = "";
+  let tote = "";
+  let roman = "";
+
+  for (let word of words) {
+
+    if (!/[а-яәіңғүұқөһ]/i.test(word)) {
+      latin += word;
+      tote += word;
+      roman += word;
+      continue;
+    }
+
+    let w = word.toLowerCase();
+    let harmony = getHarmony(w);
+    let romanWord = buildRoman(w);
+    roman += romanWord;
+
+// latin (phonetic)
+let processed = applyDiphthongs(w, harmony);
+
+let latinWord = "";
+for (let i = 0; i < processed.length; i++) {
+  let ch = processed[i];
+
+  if (ch === "и") {
+    latinWord += (harmony === "back") ? "ıy" : "iy";
+
+    continue;
+  }
+
+  latinWord += latinMap[ch] || ch;
+}
+    // tote (direct mapping!)
+    let toteWord = "";
+    for (let ch of word) {
+
+  // punctuation
+  if (punctMap[ch]) {
+    toteWord += punctMap[ch];
+    continue;
+  }
+
+  // әріп
+  let lower = ch.toLowerCase();
+  toteWord += toteMap[lower] || ch;
+}
+    if (needsHamza(w)) {
+      toteWord = "ء" + toteWord;
+    }
+
+    latin += latinWord;
+    tote += toteWord;
+  }
+
+ return { latin, tote, roman };
+}
+
+document.getElementById("input").addEventListener("input", e => {
+  let val = e.target.value;
+  let res = convert(val);
+  
+  // 1. алдымен сөздерді түркішеге аударып аламыз
+  let words = val.split(/(\s+)/);
+  let kaganParts = words.map(part => {
+    if (/[а-яәіңғүұқөһ]/i.test(part)) {
+      return convertToKagan(part);
+    }
+    // бос орынды уақытша белгі ретінде қалдырамыз
+    return part;
+  });
+
+  let kaganResult = kaganParts.join('')
+    // 2. пунктуация логикасы:
+    .replace(/[,;]\s*/g, ";")  // үтір/нүктелі үтір және одан кейінгі бос орынды бір "⁝" қылады
+    .replace(/\.\s*/g, "⁚") 
+    .replace(/\s+/g, ":");  // қалған таза бос орындарды " : " қылады
+
+  document.getElementById("latin").value = res.latin;
+  document.getElementById("tote").value = res.tote;
+  document.getElementById("roman").value = res.roman;
+  document.getElementById("kaganica").value = kaganResult.trim();
+});
+// utils
+function copyText(id) {
+  navigator.clipboard.writeText(document.getElementById(id).value);
+}
+
+function downloadText(id) {
+  const text = document.getElementById(id).value;
+  const blob = new Blob([text], { type: "text/plain" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = id + ".txt";
+  a.click();
+}
+
+</script>
+
+</body>
+</html>
