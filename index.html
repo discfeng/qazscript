@@ -285,16 +285,37 @@ function applyDiphthongs(word, harmony) {
   let result = "";
   for (let i = 0; i < word.length; i++) {
     let ch = word[i];
+    let next = word[i + 1];
+    let prev = word[i - 1];
 
     if (ch === "у") {
-      let prev = word[i - 1];
-      // Егер У дауыстыдан кейін тұрса (ау, еу, әу, т.б.) -> W
+      // 1. -уа-, -уә- және -уе- (сөз ортасындағы дифтонгтар)
+      if (next === "а" || next === "ә") {
+        result += "w";
+        continue;
+      }
+      
+      // Керуен сияқты жағдайларға: жіңішке + у + е -> iwen
+      if (next === "е" && harmony === "front") {
+        result += "iw"; 
+        continue;
+      }
+
+      // 2. Егер "у" сөздің соңында тұрса (керу, келу, бару)
+      // Ол әрқашан дауысты ретінде ıw / iw болып ашылады
+      if (i === word.length - 1) {
+        result += (harmony === "back") ? "ıw" : "iw";
+        continue;
+      }
+
+      // 3. Дауыстыдан кейін тұрса (ау, еу, оу) -> w
+      // Бұл шартты сөз соңынан кейін қоямыз, сонда "керу" қателеспейді
       if (prev && isVowel(prev)) {
         result += "w";
         continue;
       }
       
-      // Сөздің басында немесе дауыссыздан кейін -> uw / üw / ıw / iw
+      // 4. Сөз басында немесе дауыссыздан кейін (уақыт, су, ту)
       let isStart = i === 0;
       let isSecondAfterConsonant = i === 1 && prev && !isVowel(prev);
 
@@ -315,21 +336,23 @@ function convertToKagan(word) {
         .replace(/ю/g, 'йу').replace(/я/g, 'йа')
         .replace(/ё/g, 'йө').replace(/э/g, 'е');
     
-    let type = /[аоұықғ]/.test(w) ? 1 : 2; // 1 - жуан, 2 - жіңішке
+    let type = /[аоұықғ]/.test(w) ? 1 : 2;
     let result = "";
 
     const ligatures = [
-        // Дифтонгтарды бірінші тексереміз
+        // Жаңа ереже: -уа-, -уе-, -уә-
+        {key: 'уа', val: '𐰆𐰀'}, 
+        {key: 'уе', val: '𐰇𐰅'}, 
+        {key: 'уә', val: '𐰇𐰀'},
+        // Дифтонгтар
         {key: 'ау', val: '𐰀𐰆'}, 
         {key: 'еу', val: '𐰅𐰇'}, 
         {key: 'әу', val: '𐰀𐰇'},
-        // Басқа лигатуралар
+        // Лигатуралар
         {key: 'ық', val: '𐰶'}, {key: 'қы', val: '𐰶'},
         {key: 'оқ', val: '𐰸'}, {key: 'ұқ', val: '𐰸'},
         {key: 'өк', val: '𐰜'}, {key: 'үк', val: '𐰜'}, {key: 'ік', val: '𐰜'},
-        {key: 'от', val: '𐱇'}, {key: 'ұт', val: '𐱇'},
-        {key: 'ант', val: '𐰦'}, {key: 'алт', val: '𐰡'},
-        {key: 'нч', val: '𐰨'}, {key: 'нші', val: '𐰨'}
+        {key: 'от', val: '𐱇'}, {key: 'ұт', val: '𐱇'}
     ];
 
     for (let i = 0; i < w.length; i++) {
@@ -346,7 +369,6 @@ function convertToKagan(word) {
 
         let ch = w[i];
 
-        // 1. Дауыстылар
         if (ch === 'а' || ch === 'ә' || ch === 'е') {
             if (i === w.length - 1 || i === 0) { 
                 result += (ch === 'е') ? '𐰅' : '𐰀'; 
@@ -356,14 +378,12 @@ function convertToKagan(word) {
         if (ch === 'ы' || ch === 'і') { result += '𐰃'; continue; }
         if (ch === 'и') { result += '𐰄'; continue; }
         
-        // У әрпі сөздің үйлесіміне қарай
         if (ch === 'о' || ch === 'ұ' || ch === 'у') {
             result += (type === 1) ? '𐰆' : '𐰇';
             continue;
         }
         if (ch === 'ө' || ch === 'ү') { result += '𐰇'; continue; }
 
-        // 2. Дауыссыздар
         let map = kaganMap[ch];
         if (map) {
             result += (typeof map === 'object') ? map[type] : map;
@@ -372,7 +392,9 @@ function convertToKagan(word) {
         }
     }
     return result;
-}// hamza
+}
+
+// hamza
 function needsHamza(word) {
   return /[әөүі]/.test(word) && !/[кге]/.test(word);
 }
