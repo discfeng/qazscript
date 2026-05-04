@@ -223,7 +223,7 @@ const kaganMap = {
     'һ': '𐰴',
     'ц': '𐰽',
     'ч': '𐰲',
-    'ш': '𐱁'
+    'ш': '𐱁', 'щ': '𐱁𐱁'
 };
 
 const latinMap = {
@@ -233,7 +233,7 @@ const latinMap = {
   о:"o", ө:"ö", п:"p", р:"r", с:"s", т:"t",
   ұ:"u", ү:"ü", ф:"f", х:"h", һ:"h",
   ч:"c", ш:"c", щ:"cc", ы:"ı", і:"i",
-  ю:"yu", я:"ya", ц:"s", ь:"y", ъ:"ıy", э:"e"
+  ю:"yu", я:"ya", ц:"s", ь:"y", ъ:"ıy", э:"e", ё:"ö"
 };
 
 const toteMap = {
@@ -243,7 +243,7 @@ const toteMap = {
   о:"و", ө:"و", п:"پ", р:"ر", с:"س", т:"ت",
   ф:"ف", х:"ح", һ:"ھ", ұ:"ۇ", ү:"ۇ", у:"ۋ",
   ч:"ش", ш:"ش", щ:"شش", ы:"ى", і:"ى",
-  ю:"يۋ", я:"يا", ц:"س", ь:"ي", ъ:"ىي", э:"ە"
+  ю:"يۋ", я:"يا", ц:"س", ь:"ي", ъ:"ىي", э:"ە", ё:'و'
 };
 
 const punctMap = {
@@ -283,35 +283,30 @@ function getHarmony(word) {
 //У әрпі ıw uw iw üw
 function applyDiphthongs(word, harmony) {
   let result = "";
-
   for (let i = 0; i < word.length; i++) {
-
     let ch = word[i];
 
     if (ch === "у") {
-
       let prev = word[i - 1];
-
+      // Егер У дауыстыдан кейін тұрса (ау, еу, әу, т.б.) -> W
+      if (prev && isVowel(prev)) {
+        result += "w";
+        continue;
+      }
+      
+      // Сөздің басында немесе дауыссыздан кейін -> uw / üw / ıw / iw
       let isStart = i === 0;
+      let isSecondAfterConsonant = i === 1 && prev && !isVowel(prev);
 
-      let isSecondAfterVowel =
-        i === 1 && prev && isVowel(prev);
-
-      let isSecondAfterConsonant =
-        i === 1 && prev && !isVowel(prev);
-
-      if (isStart || isSecondAfterVowel || isSecondAfterConsonant) {
+      if (isStart || isSecondAfterConsonant) {
         result += (harmony === "back") ? "uw" : "üw";
       } else {
         result += (harmony === "back") ? "ıw" : "iw";
       }
-
       continue;
     }
-
     result += ch;
   }
-
   return result;
 }
 
@@ -320,11 +315,15 @@ function convertToKagan(word) {
         .replace(/ю/g, 'йу').replace(/я/g, 'йа')
         .replace(/ё/g, 'йө').replace(/э/g, 'е');
     
-    let type = /[аоұықғ]/.test(w) ? 1 : 2;
+    let type = /[аоұықғ]/.test(w) ? 1 : 2; // 1 - жуан, 2 - жіңішке
     let result = "";
 
-    // күрделі таңбалар
     const ligatures = [
+        // Дифтонгтарды бірінші тексереміз
+        {key: 'ау', val: '𐰀𐰆'}, 
+        {key: 'еу', val: '𐰅𐰇'}, 
+        {key: 'әу', val: '𐰀𐰇'},
+        // Басқа лигатуралар
         {key: 'ық', val: '𐰶'}, {key: 'қы', val: '𐰶'},
         {key: 'оқ', val: '𐰸'}, {key: 'ұқ', val: '𐰸'},
         {key: 'өк', val: '𐰜'}, {key: 'үк', val: '𐰜'}, {key: 'ік', val: '𐰜'},
@@ -346,41 +345,34 @@ function convertToKagan(word) {
         if (foundLigature) continue;
 
         let ch = w[i];
-        let next = w[i+1];
 
-        // 1. Дауыстыларды үнемдеу ережесі
-        if ((ch === 'а' || ch === 'ә' || ch === 'е')) {
-            if (i === w.length - 1) { 
+        // 1. Дауыстылар
+        if (ch === 'а' || ch === 'ә' || ch === 'е') {
+            if (i === w.length - 1 || i === 0) { 
                 result += (ch === 'е') ? '𐰅' : '𐰀'; 
             }
-            continue; // ортасында келсе жазбаймыз
+            continue; 
         }
-
-        // 2. Басқа дауыстылар
         if (ch === 'ы' || ch === 'і') { result += '𐰃'; continue; }
         if (ch === 'и') { result += '𐰄'; continue; }
+        
+        // У әрпі сөздің үйлесіміне қарай
         if (ch === 'о' || ch === 'ұ' || ch === 'у') {
-            if (type === 1) result += '𐰆'; 
-            else result += '𐰇';
+            result += (type === 1) ? '𐰆' : '𐰇';
             continue;
         }
         if (ch === 'ө' || ch === 'ү') { result += '𐰇'; continue; }
 
-        // 3. Дауыссыздар
+        // 2. Дауыссыздар
         let map = kaganMap[ch];
         if (map) {
-            if (typeof map === 'object') {
-                result += map[type];
-            } else {
-                result += map;
-            }
+            result += (typeof map === 'object') ? map[type] : map;
         } else {
-            result += ch; // картада жоқ болса өзін қалдыру
+            result += ch;
         }
     }
     return result;
-}
-// hamza
+}// hamza
 function needsHamza(word) {
   return /[әөүі]/.test(word) && !/[кге]/.test(word);
 }
