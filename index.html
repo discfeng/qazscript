@@ -113,8 +113,6 @@ footer {
 <body>
  <header>
   <div>Script converting tool</div>
-   <div class="header-center" onclick="alert('әзірленуде')">𐰴𐰔𐰴𐱁𐰀
-  </div>
 
   <div class="header-right">
      <select id="theme">
@@ -141,7 +139,7 @@ footer {
   </div>
 
 <div class="block">
-  <div class="label">көне түркі жазуы (kaganica)</div>
+  <div class="label">заманауи түркі жазуы</div>
   <textarea id="kaganica" style="font-family: 'Segoe UI Historic', 'Noto Sans Old Turkic', serif; font-size: 24px;"></textarea>
   <div class="actions">
     <button onclick="copyText('kaganica')">copy</button>
@@ -158,7 +156,7 @@ footer {
     </div>
   </div>
   <div class="block">
-    <div class="label">romanized</div>
+    <div class="label">транслит</div>
     <textarea id="roman"></textarea>
     <div class="actions">
       <button onclick="copyText('roman')">copy</button>
@@ -170,7 +168,18 @@ footer {
 
 <footer>
 
-  2026 • izumiya.uk
+  2026 • izumiya.uk <button id="qr-btn" style="cursor: pointer; background: none; border: 1px solid #555; color: white; padding: 5px 10px; border-radius: 5px;">
+  QR'қодты көрсету
+</button>
+
+<div id="qr-modal" style="display: none; position: fixed; z-index: 100; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); align-items: center; justify-content: center;">
+  <div style="background: #222; padding: 20px; border-radius: 15px; text-align: center; border: 1px solid #444;">
+    <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://izumiya.uk" alt="QR Code">
+    <p style="color: white; margin-top: 10px;">ашу үшін сқандаңыз</p>
+    <button id="close-btn" style="margin-top: 10px; color: #aaa; background: none; border: none; cursor: pointer;">закрыть</button>
+  </div>
+</div>
+  
  <br>
  <br> → қазақ тілі <a href="https://kk.wikipedia.org/wiki/%D2%9A%D0%B0%D0%B7%D0%B0%D2%9B_%D1%82%D1%96%D0%BB%D1%96" target="_blank" rel="noopener noreferrer"> wikipedia </a>
  <br> → қазақ әліпбиі <a href="https://kk.wikipedia.org/wiki/%D2%9A%D0%B0%D0%B7%D0%B0%D2%9B_%D3%99%D0%BB%D1%96%D0%BF%D0%B1%D0%B8%D1%96" target="_blank" rel="noopener noreferrer"> wikipedia </a>
@@ -314,7 +323,7 @@ function convertToKagan(word) {
     let type = /[аоұықғ]/.test(w) ? 1 : 2;
     let result = "";
 
-    // Лигатураларды алдын ала ауыстыру (күрделі таңбалар)
+    // күрделі таңбалар
     const ligatures = [
         {key: 'ық', val: '𐰶'}, {key: 'қы', val: '𐰶'},
         {key: 'оқ', val: '𐰸'}, {key: 'ұқ', val: '𐰸'},
@@ -339,7 +348,7 @@ function convertToKagan(word) {
         let ch = w[i];
         let next = w[i+1];
 
-        // 1. Дауыстыларды үнемдеу ережесі (а, ә, е жазылмайды, егер соңы болмаса)
+        // 1. Дауыстыларды үнемдеу ережесі
         if ((ch === 'а' || ch === 'ә' || ch === 'е')) {
             if (i === w.length - 1) { 
                 result += (ch === 'е') ? '𐰅' : '𐰀'; 
@@ -487,7 +496,26 @@ function downloadText(id) {
   a.download = id + ".txt";
   a.click();
 }
+const modal = document.getElementById("qr-modal");
+const btn = document.getElementById("qr-btn");
+const closeBtn = document.getElementById("close-btn");
 
+// ашу
+btn.onclick = function() {
+  modal.style.display = "flex";
+}
+
+// жабу
+closeBtn.onclick = function() {
+  modal.style.display = "none";
+}
+
+// жабу 2
+window.onclick = function(event) {
+  if (event.target == modal) {
+    modal.style.display = "none";
+  }
+}
 </script>
 
 </body>
